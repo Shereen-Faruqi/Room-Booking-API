@@ -35,7 +35,7 @@ These are public example values for local use. They are not real credentials.
 | Method and path | What it does | Success | Errors |
 |---|---|---|---|
 | `POST /bookings` | Create a booking owned by the caller | `201` with the booking | `401` missing or unknown token, `422` invalid input |
-| `GET /bookings` | List the caller's own bookings only, ordered by start time | `200` with a list | `401` missing or unknown token |
+| `GET /bookings` | List the caller's own bookings only, ordered by start time. Optional `?date=YYYY-MM-DD` keeps only bookings that start on that UTC day | `200` with a list | `401` missing or unknown token, `422` badly formatted date |
 
 Rules for `POST /bookings`:
 
@@ -53,6 +53,8 @@ curl -X POST http://127.0.0.1:8000/bookings \
   -d '{"room":"A1","starts_at":"2026-11-02T09:00:00Z","ends_at":"2026-11-02T10:00:00Z","customer_email":"guest@example.com"}'
 
 curl http://127.0.0.1:8000/bookings -H "X-User-Token: demo-token-alice"
+
+curl "http://127.0.0.1:8000/bookings?date=2026-11-02" -H "X-User-Token: demo-token-alice"
 ```
 
 ## Tests

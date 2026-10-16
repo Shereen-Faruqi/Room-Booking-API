@@ -88,6 +88,49 @@ def test_a_user_cannot_see_another_users_bookings(client, alice, bob):
         assert created["id"] not in [b["id"] for b in response.json()]
 
 
+# --- GET /bookings?date= --------------------------------------------------
+
+def test_date_filter_returns_only_bookings_starting_on_that_day(client, alice):
+    client.post("/bookings", json=booking_body(room="A1"), headers=alice)
+    client.post("/bookings", json=booking_body(room="A2", starts_at="2026-11-03T09:00:00Z",
+                                               ends_at="2026-11-03T10:00:00Z"), headers=alice)
+
+    def rooms_on(day):
+        response = client.get("/bookings", params={"date": day}, headers=alice)
+        assert response.status_code == 200
+        return [b["room"] for b in response.json()]
+
+    assert rooms_on("2026-11-02") == ["A1"]
+    assert rooms_on("2026-11-03") == ["A2"]
+    assert rooms_on("2026-11-04") == []
+
+
+def test_date_filter_never_shows_another_users_bookings(client, alice, bob):
+    secret = "bob.private@example.com"
+    client.post("/bookings", json=booking_body(room="B2", customer_email=secret), headers=bob)
+
+    response = client.get("/bookings", params={"date": "2026-11-02"}, headers=alice)
+
+    assert response.status_code == 200
+    assert response.json() == []
+    assert secret not in response.text
+
+
+@pytest.mark.parametrize("headers", [{}, {"X-User-Token": "not-a-real-token"}],
+                         ids=["no-token", "unknown-token"])
+def test_date_filter_requires_a_valid_token(client, headers):
+    response = client.get("/bookings", params={"date": "2026-11-02"}, headers=headers)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("bad_date", ["not-a-date", "2026-13-45", "02-11-2026"])
+def test_date_filter_rejects_a_badly_formatted_date(client, alice, bad_date):
+    response = client.get("/bookings", params={"date": bad_date}, headers=alice)
+
+    assert response.status_code == 422
+
+
 # --- Logging (policy 2) ---------------------------------------------------
 
 def test_creating_a_booking_does_not_log_the_customer_email(client, alice, caplog):
