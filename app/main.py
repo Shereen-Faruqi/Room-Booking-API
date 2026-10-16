@@ -63,5 +63,5 @@ def delete_booking(booking_id: int, user: str = Depends(current_user)):
             raise HTTPException(status_code=404, detail="Booking not found")
         conn.execute("DELETE FROM bookings WHERE id = ?", (booking_id,))
         conn.commit()
-    log.info("booking deleted id=%s customer_email=%s", row["id"], row["customer_email"])
+    log.info("booking deleted id=%s", row["id"])
     return Response(status_code=204)
