@@ -1,0 +1,12 @@
+# Minimal pipeline: install the pinned dependencies and run the tests.
+stages:
+  - test
+
+test:
+  stage: test
+  image: python:3.12-slim
+  variables:
+    PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  script:
+    - pip install --no-cache-dir -r requirements-dev.txt
+    - pytest

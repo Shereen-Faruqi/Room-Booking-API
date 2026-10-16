@@ -1,0 +1,7 @@
+{
+  "note": "FAKE demo users and tokens for local development and tests only. These are public example values, not real credentials.",
+  "users": [
+    {"username": "alice", "token": "demo-token-alice"},
+    {"username": "bob", "token": "demo-token-bob"}
+  ]
+}

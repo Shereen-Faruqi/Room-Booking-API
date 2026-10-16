@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Test and tool caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local SQLite database files
+*.db
+*.db-journal
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
