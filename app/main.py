@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager, closing
 from datetime import datetime
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Response
 
 from app import migrate
 from app.auth import current_user
@@ -50,3 +50,18 @@ def list_bookings(user: str = Depends(current_user)):
             "SELECT * FROM bookings WHERE owner = ? ORDER BY starts_at, id", (user,)
         ).fetchall()
     return [dict(row) for row in rows]
+
+
+@app.delete("/bookings/{booking_id}", status_code=204)
+def delete_booking(booking_id: int, user: str = Depends(current_user)):
+    with closing(connect()) as conn:
+        # Only the owner can delete. Someone else's booking looks the same as a missing one.
+        row = conn.execute(
+            "SELECT * FROM bookings WHERE id = ? AND owner = ?", (booking_id, user)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        conn.execute("DELETE FROM bookings WHERE id = ?", (booking_id,))
+        conn.commit()
+    log.info("booking deleted id=%s customer_email=%s", row["id"], row["customer_email"])
+    return Response(status_code=204)

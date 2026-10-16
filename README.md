@@ -36,6 +36,7 @@ These are public example values for local use. They are not real credentials.
 |---|---|---|---|
 | `POST /bookings` | Create a booking owned by the caller | `201` with the booking | `401` missing or unknown token, `422` invalid input |
 | `GET /bookings` | List the caller's own bookings only, ordered by start time | `200` with a list | `401` missing or unknown token |
+| `DELETE /bookings/{id}` | Delete one of the caller's own bookings | `204` with no body | `401` missing or unknown token, `404` no such booking of yours |
 
 Rules for `POST /bookings`:
 

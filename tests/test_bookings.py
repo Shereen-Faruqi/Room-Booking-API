@@ -88,6 +88,42 @@ def test_a_user_cannot_see_another_users_bookings(client, alice, bob):
         assert created["id"] not in [b["id"] for b in response.json()]
 
 
+# --- DELETE /bookings/{id} ------------------------------------------------
+
+def test_owner_can_delete_their_booking(client, alice):
+    created = client.post("/bookings", json=booking_body(), headers=alice).json()
+
+    response = client.delete(f"/bookings/{created['id']}", headers=alice)
+
+    assert response.status_code == 204
+    assert client.get("/bookings", headers=alice).json() == []
+
+
+def test_a_user_cannot_delete_another_users_booking(client, alice, bob):
+    created = client.post("/bookings", json=booking_body(), headers=alice).json()
+
+    response = client.delete(f"/bookings/{created['id']}", headers=bob)
+
+    assert response.status_code == 404
+    still_there = client.get("/bookings", headers=alice).json()
+    assert [b["id"] for b in still_there] == [created["id"]]
+
+
+@pytest.mark.parametrize("headers", [{}, {"X-User-Token": "not-a-real-token"}],
+                         ids=["no-token", "unknown-token"])
+def test_delete_requires_a_valid_token(client, alice, headers):
+    created = client.post("/bookings", json=booking_body(), headers=alice).json()
+
+    response = client.delete(f"/bookings/{created['id']}", headers=headers)
+
+    assert response.status_code == 401
+    assert len(client.get("/bookings", headers=alice).json()) == 1
+
+
+def test_deleting_a_missing_booking_returns_404(client, alice):
+    assert client.delete("/bookings/9999", headers=alice).status_code == 404
+
+
 # --- Logging (policy 2) ---------------------------------------------------
 
 def test_creating_a_booking_does_not_log_the_customer_email(client, alice, caplog):
